@@ -1,5 +1,3 @@
-# Official [Cyber Range](http://joshmadakor.tech/cyber-range) Project
-
 <img width="400" src="https://github.com/user-attachments/assets/44bac428-01bb-4fe9-9d85-96cba7698bee" alt="Tor Logo with the onion and a crosshair on it"/>
 
 # Threat Hunt Report: Unauthorized TOR Usage
@@ -193,3 +191,4 @@ The user "wizard" on the "cyberwizard" machine initiated and completed the insta
 TOR usage was confirmed on the endpoint `cyberwizard` by the user `wizard`. The device was isolated, and the user's direct manager was notified.
 
 ---
+# This is an Official [Cyber Range](http://joshmadakor.tech/cyber-range) Project
