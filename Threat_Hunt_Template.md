@@ -1,179 +1,265 @@
+# Threat Hunt Report: RDP Compromise and Post-Exploitation Activity
 
-<p align="center">
-  <img
-    src="https://github.com/user-attachments/assets/337bb215-8833-4653-b570-93c443bd9c11"
-    width="1200"
-    alt="Threat Hunt Cover Image"
-  />
-</p>
-
-
-
-
-# 🛡️ Threat Hunt Report – <Hunt Name>
+**Report ID:** INC-2025-RDP-COMPROMISE  
+**Analyst:** Jordan Bowser  
+**Incident Date:** 14 September 2025  
+**Environment:** Microsoft Defender for Endpoint, Microsoft Sentinel  
+**Affected Host:** flare  
 
 ---
 
-## 📌 Executive Summary
+## Scenario Overview
 
-<Brief, high-level overview of the threat hunt.  
-Answer what happened, why it matters, and what was discovered in 3–4 sentences.>
+Suspicious authentication activity was identified on a cloud-hosted Windows virtual machine named `flare`. The activity suggested repeated failed RDP login attempts followed by a successful authentication from an external source.
 
----
-
-## 🎯 Hunt Objectives
-
-- Identify malicious activity across endpoints and network telemetry  
-- Correlate attacker behavior to MITRE ATT&CK techniques  
-- Document evidence, detection gaps, and response opportunities  
+The objective of this investigation was to determine how access was gained, what actions were performed on the host, and whether persistence or data exfiltration occurred. The investigation was conducted using Microsoft Defender for Endpoint Advanced Hunting and supporting telemetry, following a structured methodology aligned with the MITRE ATT&CK framework.
 
 ---
 
-## 🧭 Scope & Environment
+## Incident Summary
 
-- **Environment:** <Placeholder>  
-- **Data Sources:** <Placeholder>  
-- **Timeframe:** <YYYY-MM-DD → YYYY-MM-DD>  
+An external attacker gained access to the system via an RDP brute-force attack. After successfully authenticating, the attacker executed a malicious binary, established persistence using a scheduled task, modified Microsoft Defender settings to evade detection, and performed system reconnaissance.
 
----
+The attacker then staged data into an archive file and initiated outbound communication to an external server. Evidence indicates an attempt to exfiltrate data over a non-standard port.
 
-## 📚 Table of Contents
-
-- [🧠 Hunt Overview](#-hunt-overview)
-- [🧬 MITRE ATT&CK Summary](#-mitre-attck-summary)
-- [🔍 Flag Analysis](#-flag-analysis)
-  - [🚩 Flag 1](#-flag-1)
-  - [🚩 Flag 2](#-flag-2)
-  - [🚩 Flag 3](#-flag-3)
-  - [🚩 Flag 4](#-flag-4)
-  - [🚩 Flag 5](#-flag-5)
-  - [🚩 Flag 6](#-flag-6)
-  - [🚩 Flag 7](#-flag-7)
-  - [🚩 Flag 8](#-flag-8)
-  - [🚩 Flag 9](#-flag-9)
-  - [🚩 Flag 10](#-flag-10)
-  - [🚩 Flag 11](#-flag-11)
-  - [🚩 Flag 12](#-flag-12)
-  - [🚩 Flag 13](#-flag-13)
-  - [🚩 Flag 14](#-flag-14)
-  - [🚩 Flag 15](#-flag-15)
-  - [🚩 Flag 16](#-flag-16)
-  - [🚩 Flag 17](#-flag-17)
-  - [🚩 Flag 18](#-flag-18)
-  - [🚩 Flag 19](#-flag-19)
-  - [🚩 Flag 20](#-flag-20)
-- [🚨 Detection Gaps & Recommendations](#-detection-gaps--recommendations)
-- [🧾 Final Assessment](#-final-assessment)
-- [📎 Analyst Notes](#-analyst-notes)
+This represents a full intrusion chain from initial access through to attempted exfiltration.
 
 ---
 
-## 🧠 Hunt Overview
+## Key Findings
 
-<High-level narrative describing the attack lifecycle, key behaviors observed, and why this hunt matters.>
+### Indicators of Compromise
 
----
-
-## 🧬 MITRE ATT&CK Summary
-
-| Flag | Technique Category | MITRE ID | Priority |
-|-----:|-------------------|----------|----------|
-| 1 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 2 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 3 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 4 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 5 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 6 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 7 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 8 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 9 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 10 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 11 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 12 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 13 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 14 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 15 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 16 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 17 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 18 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 19 | <Placeholder> | <Placeholder> | <Placeholder> |
-| 20 | <Placeholder> | <Placeholder> | <Placeholder> |
+| Type | Value |
+|------|------|
+| Attacker IP | 159.26.106.84 |
+| Compromised Account | slflare |
+| Host | flare |
+| Malicious Binary | msupdate.exe |
+| Execution Command | "msupdate.exe" -ExecutionPolicy Bypass -File C:\Users\Public\update_check.ps1 |
+| Scheduled Task | MicrosoftUpdateSync |
+| Defender Exclusion | C:\Windows\Temp |
+| Archive File | backup_sync.zip |
+| C2 Server | 185.92.220.87 |
+| Exfiltration Endpoint | 185.92.220.87:8081 |
 
 ---
 
-## 🔍 Flag Analysis
+## Investigation Details
 
-_All flags below are collapsible for readability._
+### Initial Access: RDP Brute Force  
+**MITRE Technique:** T1110.001
 
----
+Multiple failed login attempts were observed from an external IP, followed by a successful authentication.
 
-<details>
-<summary id="-flag-1">🚩 <strong>Flag 1: <Technique Name></strong></summary>
-
-### 🎯 Objective
-<What the attacker was trying to accomplish>
-
-### 📌 Finding
-<High-level description of the activity>
-
-### 🔍 Evidence
-
-| Field | Value |
-|------|-------|
-| Host | <Placeholder> |
-| Timestamp | <Placeholder> |
-| Process | <Placeholder> |
-| Parent Process | <Placeholder> |
-| Command Line | <Placeholder> |
-
-### 💡 Why it matters
-<Explain impact, risk, and relevance>
-
-### 🔧 KQL Query Used
-<Add KQL here>
-
-### 🖼️ Screenshot
-<Insert screenshot>
-
-### 🛠️ Detection Recommendation
-
-**Hunting Tip:**  
-<Actionable guidance for defenders>
-
-</details>
+```kql
+DeviceLogonEvents
+| where DeviceName contains "flare"
+| where ActionType == "LogonFailed"
+| summarize FailedLoginCount = count() by RemoteIP
+| sort by FailedLoginCount desc
+```
+Pivot to successful login:
+```kql
+DeviceLogonEvents  
+| where DeviceName contains "flare"  
+| where RemoteIP == "159.26.106.84"
+```
+Result: Successful login using account `slflare`.
 
 ---
 
-<!-- Duplicate Flag 1 section for Flags 2–20 -->
+### Execution: Malicious Binary
+
+**MITRE Technique:** T1059.003
+
+Process telemetry identified a suspicious binary executed shortly after login.
+```kql
+DeviceProcessEvents  
+| where DeviceName contains "flare"  
+| where AccountName == "slflare"  
+| where IsProcessRemoteSession  
+| project TimeGenerated, FileName, InitiatingProcessCommandLine  
+| sort by TimeGenerated desc
+```
+Identified binary: `msupdate.exe`
+
+Command used:
+```powershell
+"msupdate.exe" -ExecutionPolicy Bypass -File C:\Users\Public\update_check.ps1
+```
+---
+
+### Persistence: Scheduled Task
+
+**MITRE Technique:** T1053.005
+
+A scheduled task was created to maintain persistence.
+```kql
+SecurityEvent  
+| where EventSourceName == "Microsoft-Windows-Sysmon"  
+| where EventID == 13  
+| where EventData has "TaskCache"  
+| project TimeGenerated, EventData
+```
+Result: `MicrosoftUpdateSync`
 
 ---
 
-## 🚨 Detection Gaps & Recommendations
+### Defense Evasion: Defender Modification
 
-### Observed Gaps
-- <Placeholder>
-- <Placeholder>
-- <Placeholder>
+**MITRE Technique:** T1562.001
 
-### Recommendations
-- <Placeholder>
-- <Placeholder>
-- <Placeholder>
+The attacker added a Defender exclusion:
+
+C:\Windows\Temp
+
+This allowed malicious files to execute without being scanned.
 
 ---
 
-## 🧾 Final Assessment
+### Discovery: System Enumeration
 
-<Concise executive-style conclusion summarizing risk, attacker sophistication, and defensive posture.>
+**MITRE Technique:** T1082
+
+The attacker performed system reconnaissance:
+```powershell
+"cmd.exe" /c systeminfo
+```
+Additional observed activity:
+```powershell
+"C:\Windows\system32\cmd.exe" /c "tasklist /svc"
+```
+---
+
+### Collection: Data Staging
+
+**MITRE Technique:** T1560.001
+
+An archive file was created:
+
+backup_sync.zip
 
 ---
 
-## 📎 Analyst Notes
+### Command and Control
 
-- Report structured for interview and portfolio review  
-- Evidence reproducible via advanced hunting  
-- Techniques mapped directly to MITRE ATT&CK  
+**MITRE Technique:** T1071.001
+
+Outbound communication was observed to:
+
+185.92.220.87
 
 ---
 
-This template was gratefully copied from (Frederick Wilson)[https://github.com/Fredrick387/Threat-Hunt/blob/main/templates/Report%20Template.md]
+### Exfiltration Attempt
+
+**MITRE Technique:** T1048.003
+
+Outbound traffic to a non-standard port:
+
+185.92.220.87:8081
+
+---
+
+## Attack Timeline
+
+|Time (UTC)|Event|
+|---|---|
+|19:38:40|Brute-force activity begins|
+|Shortly after|Successful RDP login|
+|Minutes later|Malicious binary executed|
+|Minutes later|Scheduled task created|
+|Minutes later|Defender exclusion added|
+|Minutes later|Discovery commands executed|
+|Minutes later|Archive file created|
+|Minutes later|C2 communication established|
+|Minutes later|Exfiltration attempt observed|
+
+---
+
+## Impact Assessment
+
+**Severity:** High
+
+The attacker gained authenticated access, established persistence, modified security controls, and attempted data exfiltration. This indicates a significant compromise of the system.
+
+---
+
+## Conclusions
+
+The attack originated from exposed RDP services and weak authentication controls. After gaining access, the attacker executed commands interactively, established persistence, and prepared data for exfiltration.
+
+The use of scheduled tasks and Defender exclusions demonstrates deliberate efforts to maintain access and avoid detection.
+
+While the activity appears limited to a single host, the techniques used could be applied elsewhere in the environment.
+
+---
+
+## Lessons Learned
+
+### Key Gaps Identified
+
+- RDP exposed to the internet without sufficient controls
+- No account lockout or rate-limiting
+- Limited monitoring of Defender configuration changes
+- Insufficient visibility into scheduled task creation
+
+---
+
+## Recommendations
+
+### Immediate Actions
+
+- Disable or restrict external RDP access
+- Reset credentials for the compromised account
+- Remove scheduled task `MicrosoftUpdateSync`
+- Remove Defender exclusion for `C:\Windows\Temp`
+- Block attacker infrastructure (159.26.106.84, 185.92.220.87)
+
+---
+
+### Short-Term Improvements
+
+- Enforce MFA for remote access
+- Implement account lockout policies
+- Enable alerting for Defender configuration changes
+- Monitor scheduled task creation
+
+---
+
+### Long-Term Enhancements
+
+- Implement Zero Trust architecture
+- Expand detection coverage aligned to MITRE ATT&CK
+- Centralise logging across systems
+- Conduct regular threat hunting exercises
+
+---
+
+## Detection Opportunities
+I recommend creating alerts based on the following queries:
+### Brute Force Detection
+```kql
+DeviceLogonEvents  
+| where ActionType == "LogonFailed"  
+| summarize count() by RemoteIP  
+| where count_ > 10
+```
+### Suspicious Process Execution
+```kql
+DeviceProcessEvents  
+| where FileName endswith ".exe"  
+| where InitiatingProcessCommandLine contains "ExecutionPolicy Bypass"
+```
+### Scheduled Task Creation
+```kql
+SecurityEvent  
+| where EventID == 13  
+| where EventData has "TaskCache"
+```
+---
+
+## Final Notes
+
+This investigation demonstrates a structured threat hunting approach, combining telemetry analysis, query development, and attack chain reconstruction. It reflects practical SOC workflows and highlights the importance of both detection capability and analytical reasoning.
