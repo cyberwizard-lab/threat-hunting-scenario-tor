@@ -7,6 +7,8 @@
 **Affected Host:** flare  
 
 ---
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/11e2b603-3e49-4fa6-8af3-a843f8b2f78c" />
+---
 
 ## Scenario Overview
 
